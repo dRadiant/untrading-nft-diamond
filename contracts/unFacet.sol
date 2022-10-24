@@ -40,12 +40,12 @@ contract unFacet is nFR, CantBeEvil {
         uint256 ORatio,
         uint8 license,
         string memory tokenURI
-    ) external {
+    ) external returns(uint256 tokenId) {
         require(numGenerations >= 5 && numGenerations <= 20, "numGenerations must be between 5 and 20");
         require(rewardRatio >= 5e16 && rewardRatio <= 5e17, "rewardRatio must be between 5% and 50%");
         require(ORatio >= 5e16 && ORatio <= 5e17, "ORatio must be between 5% and 50%");
 
-        uint256 successiveRatio = (uint256(numGenerations) * 1e18).div((uint256(numGenerations) * 1e18) - 1.618e18);
+        uint256 successiveRatio = ((uint256(numGenerations) * 1e18).div((uint256(numGenerations) * 1e18) - 1.618e18)) / 100 * 100; // by ( / 100 * 100) we are effectively rounding down the successive ratio. The division takes advantage of Solidity's automatic decimal truncation, effectively removing the last 2 digits, then the multiplication adds those 2 digits back as 0s.
         uint256 percentOfProfit = rewardRatio.mul(1e18 - ORatio);
 
         ORatio = rewardRatio.mul(ORatio);
@@ -58,6 +58,8 @@ contract unFacet is nFR, CantBeEvil {
         
         _setTokenURI(newItemId, tokenURI);
         _setTokenLicense(newItemId, license);
+
+        tokenId = newItemId;
     }
 
     function releaseOR(address payable account) external {
@@ -75,9 +77,9 @@ contract unFacet is nFR, CantBeEvil {
     function transferOTokens(uint256 tokenId, address recipient, uint256 amount) external {
         unFacetStorage.Layout storage f = unFacetStorage.layout();
 
-        require(_msgSender() != address(0), "transfer from the zero address");
         require(recipient != address(0), "transfer to the zero address");
         require(recipient != _msgSender(), "transfer to self");
+        require(amount > 0, "transfer amount is 0");
 
         uint256 fromBalance = f._oTokens[tokenId].amount[_msgSender()];
         require(fromBalance >= amount, "transfer amount exceeds balance");
@@ -177,10 +179,14 @@ contract unFacet is nFR, CantBeEvil {
         l.tokenURIs[tokenId] = tokenURI;
     }
 
+    function retrieveManagerInfo() view external returns (address untradingManager, uint256 managerCut) {
+        unFacetStorage.Layout storage f = unFacetStorage.layout();
+        return (f.untradingManager, f.managerCut);
+    }
+
     function changeManagerCut(uint256 newManagerCut) external {
         unFacetStorage.Layout storage f = unFacetStorage.layout();
         require(msg.sender == f.untradingManager, "Caller not permitted");
-
         f.managerCut = newManagerCut;
     }
 }
