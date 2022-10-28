@@ -47,7 +47,7 @@ describe("unDiamond contract", function() {
 		unFactory = await ethers.getContractFactory("unDiamond");
 		[owner, untradingManager, ...addrs] = await ethers.getSigners();
 
-		unDiamond = await unFactory.deploy(untradingManager.address, managerCut, "unTrading Shared Contract", "unNFT", "");
+		unDiamond = await unFactory.deploy(untradingManager.address, managerCut, "untrading Shared Contract", "unNFT", "");
 		await unDiamond.deployed();
 
 		const unFacetFactory = await ethers.getContractFactory("unFacet");
@@ -641,7 +641,7 @@ describe("unDiamond contract", function() {
 			await unFacet.deployed();
 
 			let cut = [{ target: ethers.constants.AddressZero, action: FacetCutAction.Remove, selectors: getSelectors(unFacet).remove(["supportsInterface(bytes4)"]) }];
-
+			
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
 			await expect(unDiamond.retrieveManagerInfo()).to.be.revertedWith("DiamondBase: no facet found for function signature");
