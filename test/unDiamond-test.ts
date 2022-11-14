@@ -1,9 +1,12 @@
-const { expect } = require("chai");
-const { ethers, waffle } = require("hardhat");
+import { UnFacet } from '../typechain-types/contracts';
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-const { getSelectors, FacetCutAction } = require('./libraries/diamond.js');
+import { expect } from "chai";
+import { ethers } from "hardhat";
 
-const { div, mul } = require("@prb/math");
+import { Selectors, FacetCutAction } from './libraries/diamond';
+
+import { div, mul } from "@prb/math";
 
 describe("unDiamond contract", function() {
 
@@ -34,10 +37,10 @@ describe("unDiamond contract", function() {
 	const tokenURI = "";
 
 	let unFactory;
-	let unDiamond;
-	let owner;
-	let untradingManager;
-	let addrs;
+	let unDiamond: UnFacet; // Uses unFacet ABI - unFacet at unDiamond
+	let owner: SignerWithAddress;
+	let untradingManager: SignerWithAddress;
+	let addrs: SignerWithAddress[];
 
 	let oTokenHolders;
 
@@ -47,17 +50,17 @@ describe("unDiamond contract", function() {
 		unFactory = await ethers.getContractFactory("unDiamond");
 		[owner, untradingManager, ...addrs] = await ethers.getSigners();
 
-		unDiamond = await unFactory.deploy(untradingManager.address, managerCut, "untrading Shared Contract", "unNFT", "");
-		await unDiamond.deployed();
+		const undiamond = await unFactory.deploy(untradingManager.address, managerCut, "untrading Shared Contract", "unNFT", "");
+		await undiamond.deployed();
 
 		const unFacetFactory = await ethers.getContractFactory("unFacet");
 		const unFacet = await unFacetFactory.deploy();
 		await unFacet.deployed();
 
-		const cut = [{ target: unFacet.address, action: FacetCutAction.Add, selectors: getSelectors(unFacet).remove(['supportsInterface(bytes4)']) }];
-		await unDiamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
+		const cut = [{ target: unFacet.address, action: FacetCutAction.Add, selectors: new Selectors(unFacet).remove(['supportsInterface(bytes4)']) }];
+		await undiamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
-		unDiamond = await ethers.getContractAt('unFacet', unDiamond.address);
+		unDiamond = await ethers.getContractAt('unFacet', undiamond.address);
 
 		await unDiamond.mint(owner.address, numGenerations, rewardRatio, ORatio, license, "");
 	});
@@ -69,7 +72,7 @@ describe("unDiamond contract", function() {
 
 		it("Should set and retrieve the correct FR info", async function() {
 			let expectedArray = [numGenerations, percentOfProfit, successiveRatio, ethers.BigNumber.from("0"), ethers.BigNumber.from("1"), [owner.address]]; // ..., lastSoldPrice, ownerAmount, addressesIunDiamond
-			expect(await unDiamond.retrieveFRInfo(tokenId)).deep.to.equal(expectedArray);
+			expect(await unDiamond.retrieveFRInfo(tokenId)).to.deep.equal(expectedArray);
 		});
 
 		it("Should return the proper allotted FR", async function() {
@@ -77,11 +80,11 @@ describe("unDiamond contract", function() {
 		});
 
 		it("Should return the proper list info", async function() {
-			expect(await unDiamond.retrieveListInfo(tokenId)).deep.to.equal([ ethers.BigNumber.from("0"), ethers.constants.AddressZero, false ]);
+			expect(await unDiamond.retrieveListInfo(tokenId)).to.deep.equal([ ethers.BigNumber.from("0"), ethers.constants.AddressZero, false ]);
 		});
 
 		it("Should return the proper manager info", async () => {
-			expect(await unDiamond.retrieveManagerInfo()).deep.to.equal([ untradingManager.address, managerCut ]);
+			expect(await unDiamond.retrieveManagerInfo()).to.deep.equal([ untradingManager.address, managerCut ]);
 		});
 	});
 
@@ -350,7 +353,7 @@ describe("unDiamond contract", function() {
 		describe("oTokens", () => {
 			describe("Should have proper oTokens after Mint", () => {
 				it("Should have proper OR Info", async () => {
-					expect(await unDiamond.retrieveORInfo(tokenId)).deep.to.equal([ proportionalORatio, rewardRatio, [untradingManager.address, owner.address] ]);
+					expect(await unDiamond.retrieveORInfo(tokenId)).to.deep.equal([ proportionalORatio, rewardRatio, [untradingManager.address, owner.address] ]);
 				});
 
 				it("Should have proper oToken Balances", async () => {
@@ -393,13 +396,13 @@ describe("unDiamond contract", function() {
 					it("Should properly adjust oToken holders", async () => {
 						await unDiamond.transferOTokens(tokenId, addrs[0].address, ethers.utils.parseUnits("0.7"));
 
-						expect((await unDiamond.retrieveORInfo(tokenId))[2]).deep.to.equal([ untradingManager.address, addrs[0].address ]);
+						expect((await unDiamond.retrieveORInfo(tokenId))[2]).to.deep.equal([ untradingManager.address, addrs[0].address ]);
 
 						let c = await unDiamond.connect(addrs[0]);
 
 						await c.transferOTokens(tokenId, addrs[1].address, ethers.utils.parseUnits("0.6"));
 
-						expect((await unDiamond.retrieveORInfo(tokenId))[2]).deep.to.equal([ untradingManager.address, addrs[0].address, addrs[1].address ]);
+						expect((await unDiamond.retrieveORInfo(tokenId))[2]).to.deep.equal([ untradingManager.address, addrs[0].address, addrs[1].address ]);
 					});
 				});
 			});
@@ -426,14 +429,14 @@ describe("unDiamond contract", function() {
 						}
 
 						// FR Validation
-	
-						let expectedArray = [numGenerations, percentOfProfit, successiveRatio, ethers.utils.parseUnits("5.5"), ethers.BigNumber.from("11"), []];
+
+						let expectedArray: any = [numGenerations, percentOfProfit, successiveRatio, ethers.utils.parseUnits("5.5"), ethers.BigNumber.from("11"), []];
 	
 						for (let a = 0; a < 10; a++) {
 							expectedArray[5].push(addrs[a].address);
 						}
 	
-						expect(await unDiamond.retrieveFRInfo(tokenId)).deep.to.equal(expectedArray);
+						expect(await unDiamond.retrieveFRInfo(tokenId)).to.deep.equal(expectedArray);
 	
 						let totalOwners = [owner.address, ...expectedArray[5]];
 	
@@ -445,7 +448,7 @@ describe("unDiamond contract", function() {
 	
 						expect(greatestFR).to.equal(allottedFRs[0]);
 
-						expect(await waffle.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("1.925")); // (0.35) + (9 * 0.5 * 0.35) - Taking fixed-point dust into account - (rewardRatio) + ((totalProfitablePurchases - 1) * (ProfitIncrementor) * (rewardRatio))
+						expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("1.925")); // (0.35) + (9 * 0.5 * 0.35) - Taking fixed-point dust into account - (rewardRatio) + ((totalProfitablePurchases - 1) * (ProfitIncrementor) * (rewardRatio))
 
 						// OR Validation
 
@@ -459,7 +462,7 @@ describe("unDiamond contract", function() {
 								.to.be.above(ethers.utils.parseUnits("1.924")
 						); // This is to ensure that all the FRs + ORs match the rewardRatio in terms of allocation to the respective addresses. To account for fixed-point dust, 1.924 is checked instead of 1.925, in fact the contract is actually only short 40 wei w/o rounding, 30 wei w/ rounding.
 
-						expect((await unDiamond.retrieveORInfo(tokenId))[2]).deep.to.equal([ untradingManager.address, owner.address ]); // Ensure holder array is unaltered
+						expect((await unDiamond.retrieveORInfo(tokenId))[2]).to.deep.equal([ untradingManager.address, owner.address ]); // Ensure holder array is unaltered
 					});
 				});
 				
@@ -478,25 +481,25 @@ describe("unDiamond contract", function() {
 
 							await buyer.buy(tokenId, { value: baseSale });
 
-							expect(await waffle.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.35"));
+							expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.35"));
 							expect(await unDiamond.retrieveAllottedFR(owner.address)).to.equal(ethers.utils.parseUnits("0.21")); // 0.35 * 0.6 --- Note --- It seems that the added precision in calculating the Successive Ratio inside the contract with prb-math results in a few wei of dust, maybe we should round it?
 							expect(await unDiamond.retrieveAllottedOR(owner.address)).to.equal(ethers.utils.parseUnits("0.098")); // 0.35 * 0.4 * 0.7
 
-							let ETHBefore = await waffle.provider.getBalance(owner.address);
+							let ETHBefore = await ethers.provider.getBalance(owner.address);
 
 							let releaseTx = await (await unDiamond.releaseOR(owner.address)).wait();
 
-							expect(await waffle.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.252")); // 0.35 - 0.098
-							expect(await waffle.provider.getBalance(owner.address)).to.equal((ETHBefore.add(ethers.utils.parseUnits("0.098"))).sub((releaseTx.cumulativeGasUsed).mul(releaseTx.effectiveGasPrice))); // Add amount released - Tx fee
+							expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.252")); // 0.35 - 0.098
+							expect(await ethers.provider.getBalance(owner.address)).to.equal((ETHBefore.add(ethers.utils.parseUnits("0.098"))).sub((releaseTx.cumulativeGasUsed).mul(releaseTx.effectiveGasPrice))); // Add amount released - Tx fee
 
-							ETHBefore = await waffle.provider.getBalance(owner.address);
+							ETHBefore = await ethers.provider.getBalance(owner.address);
 
 							releaseTx = await (await unDiamond.releaseFR(owner.address)).wait();
 
-							expect(await waffle.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.042")); // 0.252 - 0.21
-							expect(await waffle.provider.getBalance(owner.address)).to.equal((ETHBefore.add(ethers.utils.parseUnits("0.21"))).sub((releaseTx.cumulativeGasUsed).mul(releaseTx.effectiveGasPrice)));
+							expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.042")); // 0.252 - 0.21
+							expect(await ethers.provider.getBalance(owner.address)).to.equal((ETHBefore.add(ethers.utils.parseUnits("0.21"))).sub((releaseTx.cumulativeGasUsed).mul(releaseTx.effectiveGasPrice)));
 
-							expect(await unDiamond.retrieveAllottedOR(untradingManager.address)).to.equal(await waffle.provider.getBalance(unDiamond.address));
+							expect(await unDiamond.retrieveAllottedOR(untradingManager.address)).to.equal(await ethers.provider.getBalance(unDiamond.address));
 						});
 					});
 				});
@@ -519,9 +522,9 @@ describe("unDiamond contract", function() {
 			});
 
 			it("Should set proper license", async () => {
-				await unDiamond.mint(owner.address, numGenerations, rewardRatio, ORatio, "6", "");
+				await unDiamond.mint(owner.address, numGenerations, rewardRatio, ORatio, "5", "");
 
-				expect(await unDiamond.getLicenseURI("2")).to.equal("ar://_D9kN1WrNWbCq55BSAGRbTB4bS3v8QAPTYmBThSbX3A/" + "6");
+				expect(await unDiamond.getLicenseURI("2")).to.equal("ar://_D9kN1WrNWbCq55BSAGRbTB4bS3v8QAPTYmBThSbX3A/" + "5");
 			});
 		});
 
@@ -544,7 +547,7 @@ describe("unDiamond contract", function() {
 				it("Should change manager cut", async () => {
 					let manager = unDiamond.connect(untradingManager);
 					await manager.changeManagerCut(ethers.utils.parseUnits("0.4"));
-					expect(await unDiamond.retrieveManagerInfo()).deep.to.equal([ untradingManager.address, ethers.utils.parseUnits("0.4") ]);
+					expect(await unDiamond.retrieveManagerInfo()).to.deep.equal([ untradingManager.address, ethers.utils.parseUnits("0.4") ]);
 				});
 			});
 		});
@@ -563,7 +566,7 @@ describe("unDiamond contract", function() {
 
 				await MockFacet.deployed();
 
-				const cut = [{ target: MockFacet.address, action: FacetCutAction.Add, selectors: getSelectors(MockFacet) }];
+				const cut = [{ target: MockFacet.address, action: FacetCutAction.Add, selectors: new Selectors(MockFacet).getSelectors() }];
 				
 				await expect(unauthorizedUser.diamondCut(cut, ethers.constants.AddressZero, "0x")).to.be.revertedWith("Ownable: sender must be owner");
 			});
@@ -578,7 +581,7 @@ describe("unDiamond contract", function() {
 
 			await MockFacet.deployed();
 
-			const cut = [{ target: MockFacet.address, action: FacetCutAction.Add, selectors: getSelectors(MockFacet).remove(["changeManagerCut(uint256)"]) }];
+			const cut = [{ target: MockFacet.address, action: FacetCutAction.Add, selectors: new Selectors(MockFacet).remove(["changeManagerCut(uint256)"]) }];
 
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
@@ -596,7 +599,7 @@ describe("unDiamond contract", function() {
 
 			await MockFacet.deployed();
 
-			let cut = [{ target: MockFacet.address, action: FacetCutAction.Add, selectors: getSelectors(MockFacet).remove(["changeManagerCut(uint256)"]) }];
+			let cut = [{ target: MockFacet.address, action: FacetCutAction.Add, selectors: new Selectors(MockFacet).remove(["changeManagerCut(uint256)"]) }];
 
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
@@ -604,7 +607,7 @@ describe("unDiamond contract", function() {
 
 			expect(await newDiamond.MockFunc()).to.equal("Hello unDiamond");
 
-			cut = [{ target: ethers.constants.AddressZero, action: FacetCutAction.Remove, selectors: getSelectors(MockFacet).remove(["changeManagerCut(uint256)"]) }];
+			cut = [{ target: ethers.constants.AddressZero, action: FacetCutAction.Remove, selectors: new Selectors(MockFacet).remove(["changeManagerCut(uint256)"]) }];
 
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
@@ -620,7 +623,7 @@ describe("unDiamond contract", function() {
 
 			await MockFacet.deployed();
 
-			const cut = [{ target: MockFacet.address, action: FacetCutAction.Replace, selectors: getSelectors(MockFacet).remove(["MockFunc()"]) }];
+			const cut = [{ target: MockFacet.address, action: FacetCutAction.Replace, selectors: new Selectors(MockFacet).remove(["MockFunc()"]) }];
 
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
@@ -630,7 +633,7 @@ describe("unDiamond contract", function() {
 
 			await newDiamond.changeManagerCut(ethers.utils.parseUnits("1"));
 
-			expect(await unDiamond.retrieveManagerInfo()).deep.to.equal([ untradingManager.address, ethers.utils.parseUnits("0.4") ]);
+			expect(await unDiamond.retrieveManagerInfo()).to.deep.equal([ untradingManager.address, ethers.utils.parseUnits("0.4") ]);
 		});
 
 		it("Should retain data after removing all functions and adding them back", async () => {
@@ -640,21 +643,25 @@ describe("unDiamond contract", function() {
 			const unFacet = await unFacetFactory.deploy();
 			await unFacet.deployed();
 
-			let cut = [{ target: ethers.constants.AddressZero, action: FacetCutAction.Remove, selectors: getSelectors(unFacet).remove(["supportsInterface(bytes4)"]) }];
+			let cut = [{ target: ethers.constants.AddressZero, action: FacetCutAction.Remove, selectors: new Selectors(unFacet).remove(["supportsInterface(bytes4)"]) }];
 			
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
 			await expect(unDiamond.retrieveManagerInfo()).to.be.revertedWith("DiamondBase: no facet found for function signature");
 
-			cut = [{ target: unFacet.address, action: FacetCutAction.Add, selectors: getSelectors(unFacet).remove(["supportsInterface(bytes4)"]) }];
+			cut = [{ target: unFacet.address, action: FacetCutAction.Add, selectors: new Selectors(unFacet).remove(["supportsInterface(bytes4)"]) }];
 
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
-			expect(await unDiamond.retrieveManagerInfo()).deep.to.equal([ untradingManager.address, managerCut ]);
+			expect(await unDiamond.retrieveManagerInfo()).to.deep.equal([ untradingManager.address, managerCut ]);
 
 			let expectedArray = [numGenerations, percentOfProfit, successiveRatio, ethers.BigNumber.from("0"), ethers.BigNumber.from("1"), [owner.address]]; // ..., lastSoldPrice, ownerAmount, addressesIunDiamond
-			expect(await unDiamond.retrieveFRInfo(tokenId)).deep.to.equal(expectedArray);
+			expect(await unDiamond.retrieveFRInfo(tokenId)).to.deep.equal(expectedArray);
 		});
 	});
 	
 });
+
+// nFR Buy function - Make sure the user is not already in the FR cycle OR allow user to buy, except not adding them to the FR cycle. Add this requirement to EIP too. Also update EIP-5173 Diamond repo
+// Verify the way nFR FR sliding window works, make sure that the user is never paying themselves FR, and only paying the people ahead of them. We need to confirm if right now the user is being added after they buy, meaning they pay themselves FR. If that is the case, we need to switch the logic to add the user to the FR cycle only after they sell. Essentially, you would only get added to the FR cycle after you sell, not after you buy. So you are not paying yourself. Need to update EIP too.
+// Add more events and update EIP

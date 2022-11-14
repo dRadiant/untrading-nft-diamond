@@ -96,6 +96,10 @@ abstract contract nFR is InFR, SolidStateERC721 {
         require(l._tokenListInfo[tokenId].isListed == true, "Token is not listed");
         require(l._tokenListInfo[tokenId].salePrice == msg.value, "salePrice and msg.value mismatch");
 
+        for (uint i = 0; i < l._addressesInFR[tokenId].length; i++) {
+            require(l._addressesInFR[tokenId][i] != _msgSender(), "Already in the FR sliding window");
+        }
+
         _transferFrom(l._tokenListInfo[tokenId].lister, _msgSender(), tokenId, l._tokenListInfo[tokenId].salePrice);
     }
 

@@ -30,7 +30,7 @@ library CantBeEvilStorage {
     }
 
     function _setTokenLicense(uint256 tokenId, uint8 license) internal {
-        require(license <= 6, "Invalid License");
+        require(license <= 5, "Invalid License");
         Layout storage l = layout();
         l.tokenLicenses[tokenId] = license;
     }

@@ -17,6 +17,8 @@ interface InFR is IERC165 {
 
     event FRDistributed(uint256 indexed tokenId, uint256 indexed soldPrice, uint256 indexed allocatedFR);
 
+    event Listed(uint256 indexed tokenId, uint256 indexed salePrice);
+
     function list(uint256 tokenId, uint256 salePrice) external;
 
     function unlist(uint256 tokenId) external;
