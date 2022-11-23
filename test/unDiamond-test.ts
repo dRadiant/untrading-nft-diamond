@@ -662,6 +662,11 @@ describe("unDiamond contract", function() {
 	
 });
 
-// nFR Buy function - Make sure the user is not already in the FR cycle OR allow user to buy, except not adding them to the FR cycle. Add this requirement to EIP too. Also update EIP-5173 Diamond repo
+// nFR Buy & Transfer functions - Make sure the user is not already in the FR cycle OR allow user to buy, except not adding them to the FR cycle. Add this requirement to EIP too. Also update EIP-5173 Diamond repo
 // Verify the way nFR FR sliding window works, make sure that the user is never paying themselves FR, and only paying the people ahead of them. We need to confirm if right now the user is being added after they buy, meaning they pay themselves FR. If that is the case, we need to switch the logic to add the user to the FR cycle only after they sell. Essentially, you would only get added to the FR cycle after you sell, not after you buy. So you are not paying yourself. Need to update EIP too.
+// For the above, we have at least 2 approaches...
+// 1. Don't add minter to FR array at mint time, and add them after they sell/transfer the NFT. Then checking for an empty FR array, and if so not distributing FR. Then adding future people with shiftGen(from) instead of shiftGen(to) after they make a sale/transfer.
+// 2. Add the minter to FR array at mint time, and check in shiftGenerations if they are already there, we could move the above nFR Buy & Transfer logic to shiftGenerations to accomplish this. Then adding future people with shiftGen(from) instead of shiftGen(to) after they make a sale/transfer.
+// 3. Add minter during mint time to FR array, and keeping the original shiftGen(to), however during distribution, exclude the latest person in the FR array. Then when running the calculate FR we may need to subtract 1 from the numGenerations and ownerAmount we pass in to get the right amt for the amt of ppl.
+// For every approach we shouldn't stress too much because we can always rewrite and upgrade it, whether that be upgrading the diamond or deploying new contracts.
 // Add more events and update EIP
