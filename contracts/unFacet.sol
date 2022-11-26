@@ -8,7 +8,7 @@ import {ERC721MetadataStorage} from "@solidstate/contracts/token/ERC721/metadata
 
 import "@prb/math/contracts/PRBMathUD60x18.sol";
 
-import "./nFR.sol";
+import "@drad/eip-5173-diamond/contracts/nFR.sol";
 import "./unFacetStorage.sol";
 
 import "./CantBeEvil.sol";
@@ -127,23 +127,16 @@ contract unFacet is nFR, CantBeEvil {
         }
     }
 
-    function _distributeFR(uint256 tokenId, uint256 soldPrice) internal override {
+    function _distributeFR(uint256 tokenId, uint256 soldPrice) internal override returns(uint256 allocatedFR) {
         _distributeOR(tokenId, soldPrice);
+        uint256 allocated = super._distributeFR(tokenId, soldPrice);
 
         nFRStorage.Layout storage l = nFRStorage.layout();
         unFacetStorage.Layout storage f = unFacetStorage.layout();
 
         uint256 profit = soldPrice - l._tokenFRInfo[tokenId].lastSoldPrice;
-        uint256[] memory FR = _calculateFR(profit, l._tokenFRInfo[tokenId].percentOfProfit, l._tokenFRInfo[tokenId].successiveRatio, l._tokenFRInfo[tokenId].ownerAmount, l._tokenFRInfo[tokenId].numGenerations);
 
-        for (uint owner = 0; owner < FR.length; owner++) {
-            l._allottedFR[l._addressesInFR[tokenId][owner]] += FR[owner];
-        }
-        
-        (bool sent, ) = payable(l._tokenListInfo[tokenId].lister).call{value: soldPrice - (profit.mul(f._oTokens[tokenId].rewardRatio))}("");
-        require(sent, "Failed to send ETH after OR and FR distribution to lister");
-
-        emit FRDistributed(tokenId, soldPrice, profit.mul(l._tokenFRInfo[tokenId].percentOfProfit));
+        allocatedFR = (allocated + profit.mul(f._oTokens[tokenId].ORatio));
     }
 
     function _burn(uint256 tokenId) internal override {

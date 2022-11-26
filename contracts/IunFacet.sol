@@ -13,26 +13,25 @@ import "@solidstate/contracts/introspection/IERC165.sol";
  */
 interface IunFacet is IERC165 {
 
-    event FRClaimed(address indexed account, uint256 indexed amount);
+    event ORClaimed(address indexed account, uint256 indexed amount);
 
-    event FRDistributed(uint256 indexed tokenId, uint256 indexed soldPrice, uint256 indexed allocatedFR);
+    event ORDistributed(uint256 indexed tokenId, uint256 indexed soldPrice, uint256 indexed allocatedFR);
 
-    event Listed(uint256 indexed tokenId, uint256 indexed salePrice);
+    event OTokenTransfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
-    event Bought(uint256 indexed tokenId, uint256 indexed salePrice);
+    event OTokensDistributed(uint256 indexed tokenId);
 
-    function list(uint256 tokenId, uint256 salePrice) external;
+    function mint(address recipient, uint8 numGenerations, uint256 rewardRatio, uint256 ORatio, uint8 license, string memory tokenURI) external returns(uint256);
 
-    function unlist(uint256 tokenId) external;
+    function transferOTokens(uint256 tokenId, address recipient, uint256 amount) external;
 
-    function buy(uint256 tokenId) payable external;
+    function releaseOR(address payable account) external;
 
-    function releaseFR(address payable account) external;
+    function retrieveORInfo(uint256 tokenId) external returns(uint256, uint256, address[] memory);
 
-    function retrieveFRInfo(uint256 tokenId) external returns(uint8, uint256, uint256, uint256, uint256, address[] memory);
+    function retrieveAllottedOR(address account) external returns(uint256);
 
-    function retrieveAllottedFR(address account) external returns(uint256);
+    function balanceOfOTokens(uint256 tokenId, address account) external returns(uint256);
 
-    function retrieveListInfo(uint256 tokenId) external returns(uint256, address, bool);
-    
+    function retrieveManagerInfo() external returns(address, uint256);
 }

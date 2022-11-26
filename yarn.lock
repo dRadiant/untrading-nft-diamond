@@ -16,6 +16,15 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
+"@drad/eip-5173-diamond@^0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@drad/eip-5173-diamond/-/eip-5173-diamond-0.0.1.tgz#fd11eaf4f1010fa937238b2c82e5668a74008a83"
+  integrity sha512-59hEzQi9dPSX2XWgovZTrbhMaZqIL3CpVGzSfLTy+LXWAi3EDgTYKJ2ct3LwkP0Fhr2ZdBhCP2k+Fwb4BkN/7A==
+  dependencies:
+    "@openzeppelin/contracts" "^4.6.0"
+    "@prb/math" "^2.5.0"
+    dotenv "^16.0.3"
+
 "@ethersproject/abi@5.7.0", "@ethersproject/abi@^5.0.0-beta.146", "@ethersproject/abi@^5.0.9", "@ethersproject/abi@^5.1.2", "@ethersproject/abi@^5.4.7", "@ethersproject/abi@^5.7.0":
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/@ethersproject/abi/-/abi-5.7.0.tgz#b3f3e045bbbeed1af3947335c247ad625a44e449"

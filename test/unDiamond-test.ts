@@ -448,7 +448,7 @@ describe("unDiamond contract", function() {
 	
 						expect(greatestFR).to.equal(allottedFRs[0]);
 
-						expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("1.925")); // (0.35) + (9 * 0.5 * 0.35) - Taking fixed-point dust into account - (rewardRatio) + ((totalProfitablePurchases - 1) * (ProfitIncrementor) * (rewardRatio))
+						expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("1.715")); // (0.14) + (9 * 0.5 * 0.35) = 1.715 - Taking fixed-point dust into account - (rewardRatio) + ((totalProfitablePurchases - 1) * (ProfitIncrementor) * (rewardRatio))
 
 						// OR Validation
 
@@ -459,8 +459,8 @@ describe("unDiamond contract", function() {
 								(allottedFRs.reduce((partialSum, a) => partialSum.add(a), ethers.BigNumber.from("0")))
 								.add(await unDiamond.retrieveAllottedOR(owner.address))
 								.add(await unDiamond.retrieveAllottedOR(untradingManager.address)))
-								.to.be.above(ethers.utils.parseUnits("1.924")
-						); // This is to ensure that all the FRs + ORs match the rewardRatio in terms of allocation to the respective addresses. To account for fixed-point dust, 1.924 is checked instead of 1.925, in fact the contract is actually only short 40 wei w/o rounding, 30 wei w/ rounding.
+								.to.be.above(ethers.utils.parseUnits("1.714")
+						); // This is to ensure that all the FRs + ORs match the rewardRatio in terms of allocation to the respective addresses. To account for fixed-point dust, 1.714 is checked instead of 1.715, in fact the contract is actually only short 40 wei w/o rounding, 30 wei w/ rounding.
 
 						expect((await unDiamond.retrieveORInfo(tokenId))[2]).to.deep.equal([ untradingManager.address, owner.address ]); // Ensure holder array is unaltered
 					});
@@ -481,23 +481,31 @@ describe("unDiamond contract", function() {
 
 							await buyer.buy(tokenId, { value: baseSale });
 
-							expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.35"));
-							expect(await unDiamond.retrieveAllottedFR(owner.address)).to.equal(ethers.utils.parseUnits("0.21")); // 0.35 * 0.6 --- Note --- It seems that the added precision in calculating the Successive Ratio inside the contract with prb-math results in a few wei of dust, maybe we should round it?
+							expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.14")); // Only OR was paid
+							expect(await unDiamond.retrieveAllottedFR(owner.address)).to.equal(ethers.utils.parseUnits("0")); // 0.35 * 0.6 --- Note --- It seems that the added precision in calculating the Successive Ratio inside the contract with prb-math results in a few wei of dust, maybe we should round it?
 							expect(await unDiamond.retrieveAllottedOR(owner.address)).to.equal(ethers.utils.parseUnits("0.098")); // 0.35 * 0.4 * 0.7
 
 							let ETHBefore = await ethers.provider.getBalance(owner.address);
 
 							let releaseTx = await (await unDiamond.releaseOR(owner.address)).wait();
 
-							expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.252")); // 0.35 - 0.098
+							expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.042")); // 0.14 - 0.098
 							expect(await ethers.provider.getBalance(owner.address)).to.equal((ETHBefore.add(ethers.utils.parseUnits("0.098"))).sub((releaseTx.cumulativeGasUsed).mul(releaseTx.effectiveGasPrice))); // Add amount released - Tx fee
 
+							const secondBuyer = unDiamond.connect(addrs[1]);
+
+							await buyer.list(tokenId, baseSale.add(ethers.utils.parseUnits(saleIncrementor)));
+
+							await secondBuyer.buy(tokenId, { value: baseSale.add(ethers.utils.parseUnits(saleIncrementor)) });
+							
+							releaseTx = await (await unDiamond.releaseOR(owner.address)).wait();
+							
 							ETHBefore = await ethers.provider.getBalance(owner.address);
 
 							releaseTx = await (await unDiamond.releaseFR(owner.address)).wait();
 
-							expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.042")); // 0.252 - 0.21
-							expect(await ethers.provider.getBalance(owner.address)).to.equal((ETHBefore.add(ethers.utils.parseUnits("0.21"))).sub((releaseTx.cumulativeGasUsed).mul(releaseTx.effectiveGasPrice)));
+							expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.063")); // OR remaining for untrading manager as FR and OR has been claimed for owner - (1*0.35*0.4*0.3) + (0.5*0.35*0.4*0.3)
+							expect(await ethers.provider.getBalance(owner.address)).to.equal((ETHBefore.add(ethers.utils.parseUnits("0.105"))).sub((releaseTx.cumulativeGasUsed).mul(releaseTx.effectiveGasPrice))); // Amount - (0.5*0.35*0.6) = 0.105
 
 							expect(await unDiamond.retrieveAllottedOR(untradingManager.address)).to.equal(await ethers.provider.getBalance(unDiamond.address));
 						});

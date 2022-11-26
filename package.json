@@ -25,6 +25,7 @@
     "typescript": ">=4.5.0"
   },
   "dependencies": {
+    "@drad/eip-5173-diamond": "^0.0.1",
     "@openzeppelin/contracts": "^4.6.0",
     "@prb/math": "^2.5.0",
     "dotenv": "^16.0.3"
