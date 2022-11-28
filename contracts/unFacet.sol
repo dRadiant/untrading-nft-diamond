@@ -13,22 +13,24 @@ import "./unFacetStorage.sol";
 
 import "./CantBeEvil.sol";
 
-contract unFacet is nFR, CantBeEvil {
+import "./IunFacet.sol";
+
+contract unFacet is IunFacet, nFR, CantBeEvil {
     using CounterStorage for CounterStorage.Layout;
 
     using PRBMathUD60x18 for uint256;
 
-    function retrieveORInfo(uint256 tokenId) external view returns (uint256 ORatio, uint256 rewardRatio, address[] memory holders) {
+    function retrieveORInfo(uint256 tokenId) external view override returns (uint256 ORatio, uint256 rewardRatio, address[] memory holders) {
         unFacetStorage.Layout storage f = unFacetStorage.layout();
         return (f._oTokens[tokenId].ORatio, f._oTokens[tokenId].rewardRatio, f._oTokens[tokenId].holders);
     }
 
-    function retrieveAllottedOR(address account) external view returns (uint256) {
+    function retrieveAllottedOR(address account) external view override returns (uint256) {
         unFacetStorage.Layout storage f = unFacetStorage.layout();
         return (f._allottedOR[account]);
     }
 
-    function balanceOfOTokens(uint256 tokenId, address account) external view returns (uint256) {
+    function balanceOfOTokens(uint256 tokenId, address account) external view override returns (uint256) {
         unFacetStorage.Layout storage f = unFacetStorage.layout();
         return (f._oTokens[tokenId].amount[account]);
     }
@@ -40,7 +42,7 @@ contract unFacet is nFR, CantBeEvil {
         uint256 ORatio,
         uint8 license,
         string memory tokenURI
-    ) external returns(uint256 tokenId) {
+    ) external override returns(uint256 tokenId) {
         require(numGenerations >= 5 && numGenerations <= 20, "numGenerations must be between 5 and 20");
         require(rewardRatio >= 5e16 && rewardRatio <= 5e17, "rewardRatio must be between 5% and 50%");
         require(ORatio >= 5e16 && ORatio <= 5e17, "ORatio must be between 5% and 50%");
@@ -62,7 +64,7 @@ contract unFacet is nFR, CantBeEvil {
         tokenId = newItemId;
     }
 
-    function releaseOR(address payable account) external {
+    function releaseOR(address payable account) external override {
         unFacetStorage.Layout storage f = unFacetStorage.layout();
         require(f._allottedOR[account] > 0, "No OR Payment due");
 
@@ -72,9 +74,11 @@ contract unFacet is nFR, CantBeEvil {
 
         (bool sent, ) = account.call{value: ORAmount}("");
         require(sent, "Failed to release OR");
+
+        emit ORClaimed(account, ORAmount);
     }
 
-    function transferOTokens(uint256 tokenId, address recipient, uint256 amount) external {
+    function transferOTokens(uint256 tokenId, address recipient, uint256 amount) external override {
         unFacetStorage.Layout storage f = unFacetStorage.layout();
 
         require(recipient != address(0), "transfer to the zero address");
@@ -102,6 +106,8 @@ contract unFacet is nFR, CantBeEvil {
         } else {
             f._oTokens[tokenId].holders.push(recipient);
         }
+
+        emit OTokenTransfer(_msgSender(), recipient, tokenId);
     }
 
     function _distributeOTokens(uint256 tokenId, address recipient, uint256 ORatio, uint256 rewardRatio) internal {
@@ -112,6 +118,8 @@ contract unFacet is nFR, CantBeEvil {
         l._oTokens[tokenId].holders = [l.untradingManager, recipient];
         l._oTokens[tokenId].amount[l.untradingManager] = l.managerCut;
         l._oTokens[tokenId].amount[recipient] = (1e18 - l.managerCut);
+
+        emit OTokensDistributed(tokenId);
     }
 
     function _distributeOR(uint256 tokenId, uint256 soldPrice) internal {
@@ -125,6 +133,8 @@ contract unFacet is nFR, CantBeEvil {
             address holderAddress = f._oTokens[tokenId].holders[holder];
             f._allottedOR[holderAddress] += ORAvailable.mul(f._oTokens[tokenId].amount[holderAddress]);
         }
+
+        emit ORDistributed(tokenId, soldPrice, ORAvailable);
     }
 
     function _distributeFR(uint256 tokenId, uint256 soldPrice) internal override returns(uint256 allocatedFR) {
@@ -144,8 +154,6 @@ contract unFacet is nFR, CantBeEvil {
         delete f._oTokens[tokenId];
         super._burn(tokenId);
     }
-
-    
 
     /*
     function mintERC721(address recipient, string memory tokenURI) external {
@@ -174,7 +182,7 @@ contract unFacet is nFR, CantBeEvil {
         l.tokenURIs[tokenId] = tokenURI;
     }
 
-    function retrieveManagerInfo() view external returns (address untradingManager, uint256 managerCut) {
+    function retrieveManagerInfo() view external override returns (address untradingManager, uint256 managerCut) {
         unFacetStorage.Layout storage f = unFacetStorage.layout();
         return (f.untradingManager, f.managerCut);
     }
