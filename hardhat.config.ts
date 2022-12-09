@@ -26,8 +26,13 @@ const config: HardhatUserConfig = {
       accounts: process.env.DEPLOYER_PRIVATE_KEY == undefined ? [] : [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
       saveDeployments: true,
     },
+    goerliProd: {
+      url: `https://goerli.infura.io/v3/${process.env.INFURA_TOKEN}`, // RPC URL
+      accounts: process.env.DEPLOYER_PRIVATE_KEY == undefined ? [] : [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
+      saveDeployments: true,
+    },
     mumbai: {
-      url: `https://rpc-mumbai.matic.today/`, // RPC URL
+      url: `https://polygon-mumbai.infura.io/v3/${process.env.INFURA_TOKEN}`, // RPC URL
       accounts: process.env.DEPLOYER_PRIVATE_KEY == undefined ? [] : [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
       saveDeployments: true,
     },
