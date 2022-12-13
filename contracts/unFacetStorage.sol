@@ -12,6 +12,12 @@ library unFacetStorage {
         uint256 rewardRatio; // The percentage of profit allocated to both FR and OR
     }
 
+    struct Wrapped {
+        address underlyingTokenAddress;
+        uint256 underlyingTokenId;
+        bool isWrapped;
+    }
+
     struct Layout {
         address untradingManager;
         uint256 managerCut; // This is the cut of the oTokens that the untradingManager gets
@@ -19,6 +25,8 @@ library unFacetStorage {
         mapping(uint256 => oToken) _oTokens; // Mapping that represents the oToken information for a given tokenId
 
         mapping(address => uint256) _allottedOR; // Mapping that represents the OR (in Ether) allotted for a given address
+
+        mapping(uint256 => Wrapped) _wrappedTokens; // Mapping that represents a tokenId's wrapping information
     }
 
     function layout() internal pure returns (Layout storage l) {

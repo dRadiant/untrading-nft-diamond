@@ -1,4 +1,5 @@
 import { UnFacet } from '../typechain-types/contracts';
+import { MockERC721 } from '../typechain-types/contracts/test';
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import { expect } from "chai";
@@ -44,7 +45,7 @@ describe("unDiamond contract", function() {
 
 	let oTokenHolders;
 
-	let ERC721Token;
+	let ERC721Token: MockERC721;
 
 	beforeEach(async function() {
 		unFactory = await ethers.getContractFactory("unDiamond");
@@ -322,7 +323,9 @@ describe("unDiamond contract", function() {
 
 	describe("untrading Transactions", () => {
 		beforeEach(async () => {
-			ERC721Token = await (await ethers.getContractFactory("MockERC721")).deploy();
+			let ERC721TokenContract = await (await ethers.getContractFactory("MockERC721")).deploy();
+
+			ERC721Token = await ethers.getContractAt("MockERC721", ERC721TokenContract.address);
 
 			await ERC721Token.mintNFT(owner.address, "example.com");
 		});
@@ -537,7 +540,38 @@ describe("unDiamond contract", function() {
 		});
 
 		describe("Wrapping", () => {
+			describe("Reverts", () => {
+				it("Should fail if contract is not approved to transfer token", async () => {
+					await expect(unDiamond.wrap(ERC721Token.address, 1, numGenerations, rewardRatio, ORatio, license, tokenURI)).to.be.revertedWith("ERC721: caller is not token owner nor approved");
+				});
+	
+				it("Should fail if token being wrapped is not ERC721", async () => {
+					let ERC20Token = await (await ethers.getContractFactory("MockERC20")).deploy();
+					await expect(unDiamond.wrap(ERC20Token.address, 1, numGenerations, rewardRatio, ORatio, license, tokenURI)).to.be.reverted;
+				});
 
+				it("Should fail with improper arguments", async () => {
+					await ERC721Token.approve(unDiamond.address, 1);
+					await expect(unDiamond.wrap(ERC721Token.address, 1, 100, rewardRatio, ORatio, license, tokenURI)).to.be.revertedWith("numGenerations must be between 5 and 20");
+					await expect(unDiamond.wrap(ERC721Token.address, 1, numGenerations, rewardRatio, ORatio, "7", tokenURI)).to.be.revertedWith("Invalid License");
+				});
+			});
+
+			it("Should transfer provided token to contract", async () => {
+				await ERC721Token.approve(unDiamond.address, 1);
+				await unDiamond.wrap(ERC721Token.address, 1, numGenerations, rewardRatio, ORatio, license, tokenURI);
+				expect(await ERC721Token.ownerOf(1)).to.equal(unDiamond.address);
+			});
+
+			it("Should mint wrapped NFT and update Wrapped", async () => {
+				await ERC721Token.approve(unDiamond.address, 1);
+				await unDiamond.wrap(ERC721Token.address, 1, numGenerations, rewardRatio, ORatio, license, tokenURI);
+
+				expect(await unDiamond.ownerOf(2)).to.equal(owner.address);
+				expect(await unDiamond.retrieveWrappedInfo(2)).to.deep.equal([ ERC721Token.address, 1, true ]);
+
+				expect(await unDiamond.retrieveWrappedInfo(tokenId)).to.deep.equal([ ethers.constants.AddressZero, 0, false ]); // Make sure non-wrapped token is blank
+			});
 		});
 
 		describe("Unwrapping", () => {

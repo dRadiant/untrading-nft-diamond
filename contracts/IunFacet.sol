@@ -23,6 +23,8 @@ interface IunFacet is IERC165 {
 
     function mint(address recipient, uint8 numGenerations, uint256 rewardRatio, uint256 ORatio, uint8 license, string memory tokenURI) external returns(uint256);
 
+    function wrap(address token, uint256 tokenId, uint8 numGenerations, uint256 rewardRatio, uint256 ORatio, uint8 license, string memory tokenURI) external;
+
     function transferOTokens(uint256 tokenId, address recipient, uint256 amount) external;
 
     function releaseOR(address payable account) external;
@@ -32,6 +34,8 @@ interface IunFacet is IERC165 {
     function retrieveAllottedOR(address account) external returns(uint256);
 
     function balanceOfOTokens(uint256 tokenId, address account) external returns(uint256);
+
+    function retrieveWrappedInfo(uint256 tokenId) external returns (address, uint256, bool);
 
     function retrieveManagerInfo() external returns(address, uint256);
 }

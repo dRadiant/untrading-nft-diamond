@@ -5,6 +5,8 @@ pragma solidity ^0.8.8;
 import {SolidStateERC721} from "@solidstate/contracts/token/ERC721/SolidStateERC721.sol";
 import {CounterStorage} from "./CounterStorage.sol";
 import {ERC721MetadataStorage} from "@solidstate/contracts/token/ERC721/metadata/ERC721MetadataStorage.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 import "@prb/math/contracts/PRBMathUD60x18.sol";
 
@@ -15,7 +17,7 @@ import "./CantBeEvil.sol";
 
 import "./IunFacet.sol";
 
-contract unFacet is IunFacet, nFR, CantBeEvil {
+contract unFacet is nFR, CantBeEvil, IunFacet, IERC721Receiver {
     using CounterStorage for CounterStorage.Layout;
 
     using PRBMathUD60x18 for uint256;
@@ -35,6 +37,11 @@ contract unFacet is IunFacet, nFR, CantBeEvil {
         return (f._oTokens[tokenId].amount[account]);
     }
 
+    function retrieveWrappedInfo(uint256 tokenId) external view override returns (address, uint256, bool) {
+        unFacetStorage.Layout storage f = unFacetStorage.layout();
+        return (f._wrappedTokens[tokenId].underlyingTokenAddress, f._wrappedTokens[tokenId].underlyingTokenId, f._wrappedTokens[tokenId].isWrapped);
+    }
+
     function mint(
         address recipient,
         uint8 numGenerations,
@@ -42,7 +49,7 @@ contract unFacet is IunFacet, nFR, CantBeEvil {
         uint256 ORatio,
         uint8 license,
         string memory tokenURI
-    ) external override returns(uint256 tokenId) {
+    ) public override returns(uint256 tokenId) {
         require(numGenerations >= 5 && numGenerations <= 20, "numGenerations must be between 5 and 20");
         require(rewardRatio >= 5e16 && rewardRatio <= 5e17, "rewardRatio must be between 5% and 50%");
         require(ORatio >= 5e16 && ORatio <= 5e17, "ORatio must be between 5% and 50%");
@@ -62,6 +69,24 @@ contract unFacet is IunFacet, nFR, CantBeEvil {
         _setTokenLicense(newItemId, license);
 
         tokenId = newItemId;
+    }
+
+    function wrap(
+        address token, 
+        uint256 tokenId, 
+        uint8 numGenerations,
+        uint256 rewardRatio,
+        uint256 ORatio,
+        uint8 license,
+        string memory tokenURI
+    ) external override {
+        uint256 newItemId = mint(_msgSender(), numGenerations, rewardRatio, ORatio, license, tokenURI);
+
+        unFacetStorage.Layout storage f = unFacetStorage.layout();
+
+        f._wrappedTokens[newItemId] = unFacetStorage.Wrapped(token, tokenId, true);
+
+        IERC721(token).safeTransferFrom(_msgSender(), address(this), tokenId);
     }
 
     function releaseOR(address payable account) external override {
@@ -191,5 +216,9 @@ contract unFacet is IunFacet, nFR, CantBeEvil {
         unFacetStorage.Layout storage f = unFacetStorage.layout();
         require(msg.sender == f.untradingManager, "Caller not permitted");
         f.managerCut = newManagerCut;
+    }
+
+    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
     }
 }
