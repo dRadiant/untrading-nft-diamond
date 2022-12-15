@@ -555,6 +555,11 @@ describe("unDiamond contract", function() {
 					await expect(unDiamond.wrap(ERC721Token.address, 1, 100, rewardRatio, ORatio, license, tokenURI)).to.be.revertedWith("numGenerations must be between 5 and 20");
 					await expect(unDiamond.wrap(ERC721Token.address, 1, numGenerations, rewardRatio, ORatio, "7", tokenURI)).to.be.revertedWith("Invalid License");
 				});
+
+				it("Should fail if token address is unDiamond", async () => {
+					await unDiamond.approve(unDiamond.address, tokenId);
+					await expect(unDiamond.wrap(unDiamond.address, tokenId, numGenerations, rewardRatio, ORatio, license, tokenURI)).to.be.revertedWith("Cannot wrap a token from this contract");
+				});
 			});
 
 			it("Should transfer provided token to contract", async () => {

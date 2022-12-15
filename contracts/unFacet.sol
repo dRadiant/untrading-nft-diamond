@@ -80,6 +80,8 @@ contract unFacet is nFR, CantBeEvil, IunFacet, IERC721Receiver {
         uint8 license,
         string memory tokenURI
     ) external override {
+        require(token != address(this), "Cannot wrap a token from this contract");
+
         uint256 newItemId = mint(_msgSender(), numGenerations, rewardRatio, ORatio, license, tokenURI);
 
         unFacetStorage.Layout storage f = unFacetStorage.layout();
@@ -175,9 +177,11 @@ contract unFacet is nFR, CantBeEvil, IunFacet, IERC721Receiver {
     }
 
     function _burn(uint256 tokenId) internal override {
-        unFacetStorage.Layout storage f = unFacetStorage.layout();
-        delete f._oTokens[tokenId];
         super._burn(tokenId);
+        unFacetStorage.Layout storage f = unFacetStorage.layout();
+
+        delete f._oTokens[tokenId];
+        delete f._wrappedTokens[tokenId];
     }
 
     /*
