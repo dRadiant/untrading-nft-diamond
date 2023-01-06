@@ -25,6 +25,8 @@ interface IunFacet is IERC165 {
 
     function wrap(address token, uint256 tokenId, uint8 numGenerations, uint256 rewardRatio, uint256 ORatio, uint8 license, string memory tokenURI) external;
 
+    function unwrap(uint256 tokenId) external;
+
     function transferOTokens(uint256 tokenId, address recipient, uint256 amount) external;
 
     function releaseOR(address payable account) external;

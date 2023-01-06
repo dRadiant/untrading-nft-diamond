@@ -91,6 +91,22 @@ contract unFacet is nFR, CantBeEvil, IunFacet, IERC721Receiver {
         IERC721(token).safeTransferFrom(_msgSender(), address(this), tokenId);
     }
 
+    function unwrap(uint256 tokenId) external override {
+        nFRStorage.Layout storage l = nFRStorage.layout();
+        unFacetStorage.Layout storage f = unFacetStorage.layout();
+
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "Caller is not owner of token");
+        require(f._wrappedTokens[tokenId].isWrapped == true, "Token is not wrapped");
+        require(l._tokenFRInfo[tokenId].ownerAmount == 1, "Unwrap is not eligible");
+
+        address underlyingTokenAddress = f._wrappedTokens[tokenId].underlyingTokenAddress;
+        uint256 underlyingTokenId = f._wrappedTokens[tokenId].underlyingTokenId;
+
+        _burn(tokenId);
+
+        IERC721(underlyingTokenAddress).safeTransferFrom(address(this), _msgSender(), underlyingTokenId);
+    }
+
     function releaseOR(address payable account) external override {
         unFacetStorage.Layout storage f = unFacetStorage.layout();
         require(f._allottedOR[account] > 0, "No OR Payment due");
