@@ -6,9 +6,9 @@ import {IERC165} from "@solidstate/contracts/introspection/IERC165.sol";
 import {ERC165Storage} from "@solidstate/contracts/introspection/ERC165Storage.sol";
 import {ERC721MetadataStorage} from "@solidstate/contracts/token/ERC721/metadata/ERC721MetadataStorage.sol";
 import {IERC721} from "@solidstate/contracts/token/ERC721/IERC721.sol";
+import "@drad/eip-5173-diamond/contracts/InFR.sol";
 
-import "./InFR.sol";
-import "./unFacetStorage.sol";
+import "./management/ManagementStorage.sol";
 
 contract unDiamond is SolidStateDiamond {
     using ERC165Storage for ERC165Storage.Layout;
@@ -42,8 +42,8 @@ contract unDiamond is SolidStateDiamond {
         );
 
         // Init the manager and managerCut used by oTokens
-        unFacetStorage.Layout storage f = unFacetStorage.layout();
-        f.untradingManager = untradingManager;
-        f.managerCut = managerCut;
+        ManagementStorage.Layout storage m = ManagementStorage.layout();
+        m.untradingManager = untradingManager;
+        m.managerCut = managerCut;
     }
 }

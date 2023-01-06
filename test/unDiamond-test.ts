@@ -71,21 +71,21 @@ describe("unDiamond contract", function() {
 			expect(await unDiamond.ownerOf(tokenId)).to.equal(owner.address);
 		});
 
-		it("Should set and retrieve the correct FR info", async function() {
+		it("Should set and get the correct FR info", async function() {
 			let expectedArray = [numGenerations, percentOfProfit, successiveRatio, ethers.BigNumber.from("0"), ethers.BigNumber.from("1"), [owner.address]]; // ..., lastSoldPrice, ownerAmount, addressesIunDiamond
-			expect(await unDiamond.retrieveFRInfo(tokenId)).to.deep.equal(expectedArray);
+			expect(await unDiamond.getFRInfo(tokenId)).to.deep.equal(expectedArray);
 		});
 
 		it("Should return the proper allotted FR", async function() {
-			expect(await unDiamond.retrieveAllottedFR(owner.address)).to.equal(ethers.BigNumber.from("0"));
+			expect(await unDiamond.getAllottedFR(owner.address)).to.equal(ethers.BigNumber.from("0"));
 		});
 
 		it("Should return the proper list info", async function() {
-			expect(await unDiamond.retrieveListInfo(tokenId)).to.deep.equal([ ethers.BigNumber.from("0"), ethers.constants.AddressZero, false ]);
+			expect(await unDiamond.getListInfo(tokenId)).to.deep.equal([ ethers.BigNumber.from("0"), ethers.constants.AddressZero, false ]);
 		});
 
 		it("Should return the proper manager info", async () => {
-			expect(await unDiamond.retrieveManagerInfo()).to.deep.equal([ untradingManager.address, managerCut ]);
+			expect(await unDiamond.getManagerInfo()).to.deep.equal([ untradingManager.address, managerCut ]);
 		});
 	});
 
@@ -124,7 +124,7 @@ describe("unDiamond contract", function() {
 		describe("oTokens", () => {
 			describe("Should have proper oTokens after Mint", () => {
 				it("Should have proper OR Info", async () => {
-					expect(await unDiamond.retrieveORInfo(tokenId)).to.deep.equal([ proportionalORatio, rewardRatio, [untradingManager.address, owner.address] ]);
+					expect(await unDiamond.getORInfo(tokenId)).to.deep.equal([ proportionalORatio, rewardRatio, [untradingManager.address, owner.address] ]);
 				});
 
 				it("Should have proper oToken Balances", async () => {
@@ -133,7 +133,7 @@ describe("unDiamond contract", function() {
 				});
 
 				it("Should have proper allotted OR", async () => {
-					expect(await unDiamond.retrieveAllottedOR(owner.address)).to.equal("0");
+					expect(await unDiamond.getAllottedOR(owner.address)).to.equal("0");
 				});
 			});
 
@@ -167,13 +167,13 @@ describe("unDiamond contract", function() {
 					it("Should properly adjust oToken holders", async () => {
 						await unDiamond.transferOTokens(tokenId, addrs[0].address, ethers.utils.parseUnits("0.7"));
 
-						expect((await unDiamond.retrieveORInfo(tokenId))[2]).to.deep.equal([ untradingManager.address, addrs[0].address ]);
+						expect((await unDiamond.getORInfo(tokenId))[2]).to.deep.equal([ untradingManager.address, addrs[0].address ]);
 
 						let c = await unDiamond.connect(addrs[0]);
 
 						await c.transferOTokens(tokenId, addrs[1].address, ethers.utils.parseUnits("0.6"));
 
-						expect((await unDiamond.retrieveORInfo(tokenId))[2]).to.deep.equal([ untradingManager.address, addrs[0].address, addrs[1].address ]);
+						expect((await unDiamond.getORInfo(tokenId))[2]).to.deep.equal([ untradingManager.address, addrs[0].address, addrs[1].address ]);
 					});
 				});
 			});
@@ -192,7 +192,7 @@ describe("unDiamond contract", function() {
 							let signer = unDiamond.connect(addrs[transfers]);
 							let secondSigner = unDiamond.connect(addrs[transfers + 1]);
 	
-							let salePrice = (await unDiamond.retrieveFRInfo(tokenId))[3].add(ethers.utils.parseUnits(saleIncrementor)); // Get lastSoldPrice and add incrementor
+							let salePrice = (await unDiamond.getFRInfo(tokenId))[3].add(ethers.utils.parseUnits(saleIncrementor)); // Get lastSoldPrice and add incrementor
 	
 							await signer.list(tokenId, salePrice);
 	
@@ -207,13 +207,13 @@ describe("unDiamond contract", function() {
 							expectedArray[5].push(addrs[a].address);
 						}
 	
-						expect(await unDiamond.retrieveFRInfo(tokenId)).to.deep.equal(expectedArray);
+						expect(await unDiamond.getFRInfo(tokenId)).to.deep.equal(expectedArray);
 	
 						let totalOwners = [owner.address, ...expectedArray[5]];
 	
 						let allottedFRs = [];
 	
-						for (let o of totalOwners) allottedFRs.push(await unDiamond.retrieveAllottedFR(o));
+						for (let o of totalOwners) allottedFRs.push(await unDiamond.getAllottedFR(o));
 	
 						let greatestFR = allottedFRs.reduce((m, e) => e.gt(m) ? e : m);
 	
@@ -223,17 +223,17 @@ describe("unDiamond contract", function() {
 
 						// OR Validation
 
-						expect(await unDiamond.retrieveAllottedOR(owner.address)).to.equal(ethers.utils.parseUnits("0.539")); // ((0.14) + (9*0.5*0.14)) * 0.7
-						expect(await unDiamond.retrieveAllottedOR(untradingManager.address)).to.equal(ethers.utils.parseUnits("0.231")); // ((0.14) + (9*0.5*0.14)) * 0.3
+						expect(await unDiamond.getAllottedOR(owner.address)).to.equal(ethers.utils.parseUnits("0.539")); // ((0.14) + (9*0.5*0.14)) * 0.7
+						expect(await unDiamond.getAllottedOR(untradingManager.address)).to.equal(ethers.utils.parseUnits("0.231")); // ((0.14) + (9*0.5*0.14)) * 0.3
 
 						expect(
 								(allottedFRs.reduce((partialSum, a) => partialSum.add(a), ethers.BigNumber.from("0")))
-								.add(await unDiamond.retrieveAllottedOR(owner.address))
-								.add(await unDiamond.retrieveAllottedOR(untradingManager.address)))
+								.add(await unDiamond.getAllottedOR(owner.address))
+								.add(await unDiamond.getAllottedOR(untradingManager.address)))
 								.to.be.above(ethers.utils.parseUnits("1.714")
 						); // This is to ensure that all the FRs + ORs match the rewardRatio in terms of allocation to the respective addresses. To account for fixed-point dust, 1.714 is checked instead of 1.715, in fact the contract is actually only short 40 wei w/o rounding, 30 wei w/ rounding.
 
-						expect((await unDiamond.retrieveORInfo(tokenId))[2]).to.deep.equal([ untradingManager.address, owner.address ]); // Ensure holder array is unaltered
+						expect((await unDiamond.getORInfo(tokenId))[2]).to.deep.equal([ untradingManager.address, owner.address ]); // Ensure holder array is unaltered
 					});
 				});
 				
@@ -253,8 +253,8 @@ describe("unDiamond contract", function() {
 							await buyer.buy(tokenId, { value: baseSale });
 
 							expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.14")); // Only OR was paid
-							expect(await unDiamond.retrieveAllottedFR(owner.address)).to.equal(ethers.utils.parseUnits("0")); // 0.35 * 0.6 --- Note --- It seems that the added precision in calculating the Successive Ratio inside the contract with prb-math results in a few wei of dust, maybe we should round it?
-							expect(await unDiamond.retrieveAllottedOR(owner.address)).to.equal(ethers.utils.parseUnits("0.098")); // 0.35 * 0.4 * 0.7
+							expect(await unDiamond.getAllottedFR(owner.address)).to.equal(ethers.utils.parseUnits("0")); // 0.35 * 0.6 --- Note --- It seems that the added precision in calculating the Successive Ratio inside the contract with prb-math results in a few wei of dust, maybe we should round it?
+							expect(await unDiamond.getAllottedOR(owner.address)).to.equal(ethers.utils.parseUnits("0.098")); // 0.35 * 0.4 * 0.7
 
 							let ETHBefore = await ethers.provider.getBalance(owner.address);
 
@@ -278,7 +278,7 @@ describe("unDiamond contract", function() {
 							expect(await ethers.provider.getBalance(unDiamond.address)).to.equal(ethers.utils.parseUnits("0.063")); // OR remaining for untrading manager as FR and OR has been claimed for owner - (1*0.35*0.4*0.3) + (0.5*0.35*0.4*0.3)
 							expect(await ethers.provider.getBalance(owner.address)).to.equal((ETHBefore.add(ethers.utils.parseUnits("0.105"))).sub((releaseTx.cumulativeGasUsed).mul(releaseTx.effectiveGasPrice))); // Amount - (0.5*0.35*0.6) = 0.105
 
-							expect(await unDiamond.retrieveAllottedOR(untradingManager.address)).to.equal(await ethers.provider.getBalance(unDiamond.address));
+							expect(await unDiamond.getAllottedOR(untradingManager.address)).to.equal(await ethers.provider.getBalance(unDiamond.address));
 						});
 					});
 				});
@@ -292,11 +292,11 @@ describe("unDiamond contract", function() {
 				});
 			});
 
-			it("Should retrieve proper license name", async () => {
+			it("Should get proper license name", async () => {
 				expect(await unDiamond.getLicenseName(tokenId)).to.equal("CBE_CC0");
 			});
 
-			it("Should retrieve proper license uri", async () => {
+			it("Should get proper license uri", async () => {
 				expect(await unDiamond.getLicenseURI(tokenId)).to.equal("ar://_D9kN1WrNWbCq55BSAGRbTB4bS3v8QAPTYmBThSbX3A/" + license);
 			});
 
@@ -341,9 +341,9 @@ describe("unDiamond contract", function() {
 				await unDiamond.wrap(ERC721Token.address, 1, numGenerations, rewardRatio, ORatio, license, tokenURI);
 
 				expect(await unDiamond.ownerOf(2)).to.equal(owner.address);
-				expect(await unDiamond.retrieveWrappedInfo(2)).to.deep.equal([ ERC721Token.address, 1, true ]);
+				expect(await unDiamond.getWrappedInfo(2)).to.deep.equal([ ERC721Token.address, 1, true ]);
 
-				expect(await unDiamond.retrieveWrappedInfo(tokenId)).to.deep.equal([ ethers.constants.AddressZero, 0, false ]); // Make sure non-wrapped token is blank
+				expect(await unDiamond.getWrappedInfo(tokenId)).to.deep.equal([ ethers.constants.AddressZero, 0, false ]); // Make sure non-wrapped token is blank
 			});
 		});
 
@@ -397,10 +397,10 @@ describe("unDiamond contract", function() {
 
 				await unDiamond.unwrap(tokenId + 1);
 
-				expect(await unDiamond.retrieveFRInfo(tokenId + 1)).to.deep.equal([ 0, 0, 0, 0, 0, []]);
-				expect(await unDiamond.retrieveListInfo(tokenId + 1)).to.deep.equal([ 0, ethers.constants.AddressZero, false ]);
-				expect(await unDiamond.retrieveORInfo(tokenId + 1)).to.deep.equal([ 0, 0, [] ]);
-				expect(await unDiamond.retrieveWrappedInfo(tokenId + 1)).to.deep.equal([ ethers.constants.AddressZero, 0, false ]);
+				expect(await unDiamond.getFRInfo(tokenId + 1)).to.deep.equal([ 0, 0, 0, 0, 0, []]);
+				expect(await unDiamond.getListInfo(tokenId + 1)).to.deep.equal([ 0, ethers.constants.AddressZero, false ]);
+				expect(await unDiamond.getORInfo(tokenId + 1)).to.deep.equal([ 0, 0, [] ]);
+				expect(await unDiamond.getWrappedInfo(tokenId + 1)).to.deep.equal([ ethers.constants.AddressZero, 0, false ]);
 			});
 		});
 
@@ -408,14 +408,14 @@ describe("unDiamond contract", function() {
 			describe("Manager Cut", () => {
 				describe("Reverts", () => {
 					it("Should revert if caller is not permitted", async () => {
-						await expect(unDiamond.changeManagerCut(ethers.utils.parseUnits("1"))).to.be.revertedWith("Caller not permitted");
+						await expect(unDiamond.setManagerCut(ethers.utils.parseUnits("1"))).to.be.revertedWith("Caller not permitted");
 					});
 				});
 
 				it("Should change manager cut", async () => {
 					let manager = unDiamond.connect(untradingManager);
-					await manager.changeManagerCut(ethers.utils.parseUnits("0.4"));
-					expect(await unDiamond.retrieveManagerInfo()).to.deep.equal([ untradingManager.address, ethers.utils.parseUnits("0.4") ]);
+					await manager.setManagerCut(ethers.utils.parseUnits("0.4"));
+					expect(await unDiamond.getManagerInfo()).to.deep.equal([ untradingManager.address, ethers.utils.parseUnits("0.4") ]);
 				});
 			});
 		});
@@ -449,7 +449,7 @@ describe("unDiamond contract", function() {
 
 			await MockFacet.deployed();
 
-			const cut = [{ target: MockFacet.address, action: FacetCutAction.Add, selectors: new Selectors(MockFacet).remove(["changeManagerCut(uint256)"]) }];
+			const cut = [{ target: MockFacet.address, action: FacetCutAction.Add, selectors: new Selectors(MockFacet).remove(["setManagerCut(uint256)"]) }];
 
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
@@ -467,7 +467,7 @@ describe("unDiamond contract", function() {
 
 			await MockFacet.deployed();
 
-			let cut = [{ target: MockFacet.address, action: FacetCutAction.Add, selectors: new Selectors(MockFacet).remove(["changeManagerCut(uint256)"]) }];
+			let cut = [{ target: MockFacet.address, action: FacetCutAction.Add, selectors: new Selectors(MockFacet).remove(["setManagerCut(uint256)"]) }];
 
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
@@ -475,7 +475,7 @@ describe("unDiamond contract", function() {
 
 			expect(await newDiamond.MockFunc()).to.equal("Hello unDiamond");
 
-			cut = [{ target: ethers.constants.AddressZero, action: FacetCutAction.Remove, selectors: new Selectors(MockFacet).remove(["changeManagerCut(uint256)"]) }];
+			cut = [{ target: ethers.constants.AddressZero, action: FacetCutAction.Remove, selectors: new Selectors(MockFacet).remove(["setManagerCut(uint256)"]) }];
 
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
@@ -499,9 +499,9 @@ describe("unDiamond contract", function() {
 
 			newDiamond = await newDiamond.connect(untradingManager);
 
-			await newDiamond.changeManagerCut(ethers.utils.parseUnits("1"));
+			await newDiamond.setManagerCut(ethers.utils.parseUnits("1"));
 
-			expect(await unDiamond.retrieveManagerInfo()).to.deep.equal([ untradingManager.address, ethers.utils.parseUnits("0.4") ]);
+			expect(await unDiamond.getManagerInfo()).to.deep.equal([ untradingManager.address, ethers.utils.parseUnits("0.4") ]);
 		});
 
 		it("Should retain data after removing all functions and adding them back", async () => {
@@ -515,16 +515,16 @@ describe("unDiamond contract", function() {
 			
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
-			await expect(unDiamond.retrieveManagerInfo()).to.be.revertedWith("DiamondBase: no facet found for function signature");
+			await expect(unDiamond.getManagerInfo()).to.be.revertedWith("DiamondBase: no facet found for function signature");
 
 			cut = [{ target: unFacet.address, action: FacetCutAction.Add, selectors: new Selectors(unFacet).remove(["supportsInterface(bytes4)"]) }];
 
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
-			expect(await unDiamond.retrieveManagerInfo()).to.deep.equal([ untradingManager.address, managerCut ]);
+			expect(await unDiamond.getManagerInfo()).to.deep.equal([ untradingManager.address, managerCut ]);
 
 			let expectedArray = [numGenerations, percentOfProfit, successiveRatio, ethers.BigNumber.from("0"), ethers.BigNumber.from("1"), [owner.address]]; // ..., lastSoldPrice, ownerAmount, addressesIunDiamond
-			expect(await unDiamond.retrieveFRInfo(tokenId)).to.deep.equal(expectedArray);
+			expect(await unDiamond.getFRInfo(tokenId)).to.deep.equal(expectedArray);
 		});
 	});
 	

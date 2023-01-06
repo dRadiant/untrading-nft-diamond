@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.8;
 
 import "@solidstate/contracts/introspection/IERC165.sol";
 
 /*
  *
- * @dev Interface for the Future Rewards Token Standard.
- *
- * A standardized way to receive future rewards for non-fungible tokens (NFTs.)
+ * @dev Interface for the untrading unFacet.
  *
  */
 interface IunFacet is IERC165 {
@@ -31,13 +29,11 @@ interface IunFacet is IERC165 {
 
     function releaseOR(address payable account) external;
 
-    function retrieveORInfo(uint256 tokenId) external returns(uint256, uint256, address[] memory);
+    function getORInfo(uint256 tokenId) external view returns(uint256, uint256, address[] memory);
 
-    function retrieveAllottedOR(address account) external returns(uint256);
+    function getAllottedOR(address account) external view returns(uint256);
 
-    function balanceOfOTokens(uint256 tokenId, address account) external returns(uint256);
+    function balanceOfOTokens(uint256 tokenId, address account) external view returns(uint256);
 
-    function retrieveWrappedInfo(uint256 tokenId) external returns (address, uint256, bool);
-
-    function retrieveManagerInfo() external returns(address, uint256);
+    function getWrappedInfo(uint256 tokenId) external view returns (address, uint256, bool);
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.8;
 
-import "../unFacetStorage.sol";
+import "../management/ManagementStorage.sol";
 
 contract MockFacet {
     function MockFunc() external pure returns (string memory) {
@@ -12,9 +12,9 @@ contract MockFacet {
         return "Hello unDiamond";
     }
 
-    function changeManagerCut(uint256 newManagerCut) external {
-        unFacetStorage.Layout storage f = unFacetStorage.layout();
-        require(msg.sender == f.untradingManager, "Caller not permitted");
-        f.managerCut = 0.4e18;
+    function setManagerCut(uint256 newManagerCut) external {
+        ManagementStorage.Layout storage m = ManagementStorage.layout();
+        require(msg.sender == m.untradingManager, "Caller not permitted");
+        m.managerCut = 0.4e18;
     }
 }
