@@ -3,7 +3,7 @@
 pragma solidity ^0.8.8;
 
 library CounterStorage {
-    bytes32 internal constant STORAGE_SLOT = keccak256("counter.storage");
+    bytes32 internal constant STORAGE_SLOT = keccak256("untrading.unDiamond.NFT.facet.counter.storage");
 
     struct Layout {
         uint256 tokenIds;

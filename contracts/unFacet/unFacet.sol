@@ -9,7 +9,7 @@ import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Recei
 
 import "@prb/math/contracts/PRBMathUD60x18.sol";
 
-import "@drad/eip-5173-diamond/contracts/nFR.sol";
+import "@drad/eip-5173-diamond/contracts/nFR/nFR.sol";
 
 import {CounterStorage} from "../utils/CounterStorage.sol";
 

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.8;
 
 library oTokenStorage {
-    bytes32 internal constant STORAGE_SLOT = keccak256("unDiamond.facet.otokens.storage");
+    bytes32 internal constant STORAGE_SLOT = keccak256("untrading.unDiamond.NFT.facet.otokens.storage");
 
     struct oToken {
         uint256 ORatio; // The percentage of the profit

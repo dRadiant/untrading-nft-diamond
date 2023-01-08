@@ -5,7 +5,7 @@ pragma solidity ^0.8.8;
 import {UintUtils} from "@solidstate/contracts/utils/UintUtils.sol";
 
 library CantBeEvilStorage {
-    bytes32 internal constant STORAGE_SLOT = keccak256("nFR.facet.contract.licenses.cant.be.evil");
+    bytes32 internal constant STORAGE_SLOT = keccak256("untrading.unDiamond.NFT.facet.licenses.CantBeEvil.storage");
 
     string internal constant _BASE_LICENSE_URI = "ar://_D9kN1WrNWbCq55BSAGRbTB4bS3v8QAPTYmBThSbX3A/";
 

@@ -16,10 +16,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@drad/eip-5173-diamond@^0.0.1":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@drad/eip-5173-diamond/-/eip-5173-diamond-0.0.1.tgz#fd11eaf4f1010fa937238b2c82e5668a74008a83"
-  integrity sha512-59hEzQi9dPSX2XWgovZTrbhMaZqIL3CpVGzSfLTy+LXWAi3EDgTYKJ2ct3LwkP0Fhr2ZdBhCP2k+Fwb4BkN/7A==
+"@drad/eip-5173-diamond@^0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@drad/eip-5173-diamond/-/eip-5173-diamond-0.0.4.tgz#6282bfaf7b73b705b89288f319b7670c8d215608"
+  integrity sha512-lVF9l0GGooz8IOdAYyASOERAf0B3lft2WHyJqCtyNYdSCi/b4i4f75DByfD7MN97VKeVDj7yBLmMbZeoA07+SA==
   dependencies:
     "@openzeppelin/contracts" "^4.6.0"
     "@prb/math" "^2.5.0"

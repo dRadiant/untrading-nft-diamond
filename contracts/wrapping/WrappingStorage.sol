@@ -3,7 +3,7 @@
 pragma solidity ^0.8.8;
 
 library WrappingStorage {
-    bytes32 internal constant STORAGE_SLOT = keccak256("unDiamond.facet.wrapping.storage");
+    bytes32 internal constant STORAGE_SLOT = keccak256("untrading.unDiamond.NFT.facet.ERC721.wrapping.storage");
 
     struct Wrapped {
         address underlyingTokenAddress;

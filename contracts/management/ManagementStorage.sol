@@ -3,7 +3,7 @@
 pragma solidity ^0.8.8;
 
 library ManagementStorage {
-    bytes32 internal constant STORAGE_SLOT = keccak256("unDiamond.facet.management.storage");
+    bytes32 internal constant STORAGE_SLOT = keccak256("untrading.unDiamond.NFT.facet.management.storage");
 
     struct Layout {
         address untradingManager;
