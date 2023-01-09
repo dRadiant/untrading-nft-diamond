@@ -16,10 +16,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@drad/eip-5173-diamond@^0.0.4":
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/@drad/eip-5173-diamond/-/eip-5173-diamond-0.0.4.tgz#6282bfaf7b73b705b89288f319b7670c8d215608"
-  integrity sha512-lVF9l0GGooz8IOdAYyASOERAf0B3lft2WHyJqCtyNYdSCi/b4i4f75DByfD7MN97VKeVDj7yBLmMbZeoA07+SA==
+"@drad/eip-5173-diamond@^0.0.5":
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/@drad/eip-5173-diamond/-/eip-5173-diamond-0.0.5.tgz#01fa1c54490ae5f20fe586ec332a087bf25724c1"
+  integrity sha512-fpZ7GKub5Gw9ulnYdAUzfAwUNg596IaSa+XeH1Fde8IeM9SnHgD3JKur0t4W2qXZ1pVY0xKhU0lziNBTd+9tlw==
   dependencies:
     "@openzeppelin/contracts" "^4.6.0"
     "@prb/math" "^2.5.0"
@@ -787,10 +787,10 @@
   dependencies:
     antlr4ts "^0.5.0-alpha.4"
 
-"@solidstate/contracts@^0.0.41":
-  version "0.0.41"
-  resolved "https://registry.yarnpkg.com/@solidstate/contracts/-/contracts-0.0.41.tgz#2414502e2518da99eb27b9f9d17d6cc9bb1f2ead"
-  integrity sha512-M7Lh7IigkBJqNMriFEi5z0eGgNG9UpBjYSfxn0fmP/+zzyNkVwOnOkNRPB5Wx/owLiFv0B7Hkto5hR9F8FizbA==
+"@solidstate/contracts@^0.0.52":
+  version "0.0.52"
+  resolved "https://registry.yarnpkg.com/@solidstate/contracts/-/contracts-0.0.52.tgz#cfe7e2ef237421f6e150927d7338c1ef02daa7b8"
+  integrity sha512-xSBn5oLnfYtgNYrsRq/COlWHt0NxK26PFQ3FvI2DDMAFpZKFsffGLzUl8umezj2gVKpN7EZ+EVLdPKjqx6eUOw==
 
 "@tsconfig/node10@^1.0.7":
   version "1.0.9"

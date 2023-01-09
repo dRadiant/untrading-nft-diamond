@@ -2,16 +2,16 @@
 pragma solidity ^0.8.8;
 
 import "@solidstate/contracts/proxy/diamond/SolidStateDiamond.sol";
-import {IERC165} from "@solidstate/contracts/introspection/IERC165.sol";
-import {ERC165Storage} from "@solidstate/contracts/introspection/ERC165Storage.sol";
+import {IERC165} from "@solidstate/contracts/interfaces/IERC165.sol";
+import {ERC165BaseStorage} from "@solidstate/contracts/introspection/ERC165/base/ERC165BaseStorage.sol";
 import {ERC721MetadataStorage} from "@solidstate/contracts/token/ERC721/metadata/ERC721MetadataStorage.sol";
-import {IERC721} from "@solidstate/contracts/token/ERC721/IERC721.sol";
+import {IERC721} from "@solidstate/contracts/interfaces/IERC721.sol";
 import "@drad/eip-5173-diamond/contracts/nFR/InFR.sol";
 
 import "./management/ManagementStorage.sol";
 
 contract unDiamond is SolidStateDiamond {
-    using ERC165Storage for ERC165Storage.Layout;
+    using ERC165BaseStorage for ERC165BaseStorage.Layout;
 
     constructor(
         address untradingManager,
@@ -28,18 +28,9 @@ contract unDiamond is SolidStateDiamond {
         l.baseURI = baseURI;
 
         // Declare all interfaces supported by the Diamond
-        ERC165Storage.layout().setSupportedInterface(
-            type(IERC165).interfaceId,
-            true
-        );
-        ERC165Storage.layout().setSupportedInterface(
-            type(IERC721).interfaceId,
-            true
-        );
-        ERC165Storage.layout().setSupportedInterface(
-            type(InFR).interfaceId,
-            true
-        );
+        ERC165BaseStorage.layout().supportedInterfaces[type(IERC165).interfaceId] = true;
+        ERC165BaseStorage.layout().supportedInterfaces[type(IERC721).interfaceId] = true;
+        ERC165BaseStorage.layout().supportedInterfaces[type(InFR).interfaceId] = true;
 
         // Init the manager and managerCut used by oTokens
         ManagementStorage.Layout storage m = ManagementStorage.layout();

@@ -436,7 +436,7 @@ describe("unDiamond contract", function() {
 
 				const cut = [{ target: MockFacet.address, action: FacetCutAction.Add, selectors: new Selectors(MockFacet).getSelectors() }];
 				
-				await expect(unauthorizedUser.diamondCut(cut, ethers.constants.AddressZero, "0x")).to.be.revertedWith("Ownable: sender must be owner");
+				await expect(unauthorizedUser.diamondCut(cut, ethers.constants.AddressZero, "0x")).to.be.revertedWithCustomError(diamond, "Ownable__NotOwner");
 			});
 		});
 
@@ -479,7 +479,7 @@ describe("unDiamond contract", function() {
 
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
-			await expect(newDiamond.MockFunc()).to.be.revertedWith("DiamondBase: no facet found for function signature");
+			await expect(newDiamond.MockFunc()).to.be.revertedWithCustomError(diamond, "Proxy__ImplementationIsNotContract");
 		});
 
 		it("Should update a function properly", async () => {
@@ -515,7 +515,7 @@ describe("unDiamond contract", function() {
 			
 			await diamond.diamondCut(cut, ethers.constants.AddressZero, "0x");
 
-			await expect(unDiamond.getManagerInfo()).to.be.revertedWith("DiamondBase: no facet found for function signature");
+			await expect(unDiamond.getManagerInfo()).to.be.revertedWithCustomError(diamond, "Proxy__ImplementationIsNotContract");
 
 			cut = [{ target: unFacet.address, action: FacetCutAction.Add, selectors: new Selectors(unFacet).remove(["supportsInterface(bytes4)"]) }];
 
